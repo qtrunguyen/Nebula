@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/qtrunguyen/Nebula/p2p"
 )
 
 func makeServer(listenAddr string, nodes ...string) *FileServer {
+	safeAddr := strings.ReplaceAll(listenAddr, ":", "_")
 	tcptransportOpts := p2p.TCPTransportOpts{
 		ListenAddr:    listenAddr,
 		HandshakeFunc: p2p.NOPHandshakeFunc,
@@ -20,7 +22,7 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 
 	fileServerOpts := FileServerOpts{
 		EncKey:            newEncryptionKey(),
-		StorageRoot:       listenAddr + "_network",
+		StorageRoot:       safeAddr + "_network",
 		PathTransformFunc: CASPathTransformFunc,
 		Transport:         tcpTransport,
 		BootstrapNodes:    nodes,
@@ -34,9 +36,9 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 }
 
 func main() {
-	s1 := makeServer(":3000", "")
+	s1 := makeServer(":3001", "")
 	s2 := makeServer(":7000", "")
-	s3 := makeServer(":5000", ":3000", ":7000")
+	s3 := makeServer(":5000", ":3001", ":7000")
 
 	go func() { log.Fatal(s1.Start()) }()
 	time.Sleep(500 * time.Millisecond)
